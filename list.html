@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <title>計測震度データベース</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GRQELX997W"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-GRQELX997W');
+    </script>
+
+    <link rel="stylesheet" href="css/uikit.min.css" />
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f3f6f9;
+            color: #222;
+        }
+
+        /* =========================
+           全体レイアウト
+        ========================= */
+        .page-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+        }
+
+        /* =========================
+           固定アクションボタン
+        ========================= */
+        .floating-btn-group {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-floating {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #dfe4e9;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .btn-floating:hover {
+            background: #f8fafc;
+            color: #1976d2;
+            border-color: #1976d2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        /* =========================
+           メインカード & タイトル
+        ========================= */
+        .data-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            padding: 32px;
+            margin-top: 10px;
+        }
+
+        .data-title {
+            display: flex;
+            align-items: center;
+            margin: 0 0 25px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .data-title::before {
+            content: "";
+            display: inline-block;
+            width: 5px;
+            height: 26px;
+            margin-right: 12px;
+            background: #1976d2;
+            border-radius: 3px;
+        }
+
+        /* =========================
+           テーブルスタイル
+        ========================= */
+        .uk-table {
+            margin-top: 0;
+        }
+
+        .uk-table th {
+            color: #555;
+            font-weight: 700;
+            border-bottom: 2px solid #e6e9ed;
+            padding-bottom: 12px;
+        }
+
+        #table tr {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        #table tr:hover {
+            background-color: #f0f6ff;
+        }
+
+        /* ソートボタン */
+        .sort-button {
+            padding: 0;
+            font-weight: 700;
+            color: #555;
+            text-transform: none;
+            transition: color 0.2s;
+        }
+
+        .sort-button:hover {
+            color: #1976d2;
+            text-decoration: none;
+        }
+
+        .sort-arrow {
+            margin-left: 4px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        /* =========================
+           ページネーション & フッター
+        ========================= */
+        .uk-pagination {
+            margin-top: 28px;
+            margin-bottom: 0;
+        }
+
+        .uk-pagination > .uk-active > * {
+            color: #1976d2;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 35px;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .footer a {
+            color: #1976d2;
+            text-decoration: underline;
+        }
+
+        /* =========================
+           レスポンシブ
+        ========================= */
+        @media (max-width: 640px) {
+            .page-container {
+                padding: 70px 12px 40px; /* 上部に固定ボタン用の余白確保 */
+            }
+
+            .floating-btn-group {
+                top: 12px;
+                left: 12px;
+                flex-direction: row;
+            }
+
+            .data-card {
+                padding: 20px 14px;
+                border-radius: 12px;
+            }
+
+            .data-title {
+                font-size: 20px;
+                margin-bottom: 18px;
+            }
+
+            .data-title::before {
+                height: 22px;
+            }
+
+            .uk-table {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 固定アクションボタン -->
+    <div class="floating-btn-group">
+        <a id="backbtn"
+            href="index.html"
+            class="uk-icon-button btn-floating"
+            uk-icon="arrow-left"
+            uk-tooltip="title: 月データ一覧へ戻る; pos: right">
+        </a>
+        <a id="fromurlbtn"
+            href="fromurl.html"
+            class="uk-icon-button btn-floating"
+            uk-icon="search"
+            uk-tooltip="title: 震度データベースのURLから選択する; pos: right">
+        </a>
+    </div>
+
+    <div class="page-container">
+
+        <!-- メインコンテンツカード -->
+        <div class="data-card">
+
+            <!-- タイトル -->
+            <h1 class="data-title" id="title">読み込み中...</h1>
+
+            <div class="uk-overflow-auto">
+                <table class="uk-table uk-table-divider uk-table-small uk-table-hover">
+                    <thead>
+                        <tr>
+                            <th>地震番号</th>
+                            <th>
+                                <button id="timeSortBtn"
+                                    class="uk-button uk-button-text sort-button"
+                                    onclick="sortQuakes('time')">
+                                    発生時刻 <span class="sort-arrow">↕</span>
+                                </button>
+                            </th>
+                            <th>震央地名</th>
+                            <th>深さ</th>
+                            <th>
+                                <button id="magnitudeSortBtn"
+                                    class="uk-button uk-button-text sort-button"
+                                    onclick="sortQuakes('magnitude')">
+                                    マグニチュード <span class="sort-arrow">↕</span>
+                                </button>
+                            </th>
+                            <th>
+                                <button id="intensitySortBtn"
+                                    class="uk-button uk-button-text sort-button"
+                                    onclick="sortQuakes('maxInt')">
+                                    最大震度 <span class="sort-arrow">↕</span>
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="table">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ページネーション -->
+            <ul class="uk-pagination uk-flex-center" uk-margin id="pagination">
+            </ul>
+
+        </div>
+
+        <!-- フッター -->
+        <p class="footer">
+            Copyright 2023-2026 iku55. Source codes are licensed under the MIT License.<br>
+            このサイトはGoogleアナリティクスを使用しています。<br>
+            情報の正確性は保証しません。不正確なデータを確認した場合は
+            <a href="https://forms.gle/hewkCjRMcgYUGxmH6" target="_blank">こちらのフォーム</a>
+            からご報告ください。
+        </p>
+
+    </div>
+
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+
+    <script>
+        var quakes;
+        var source;
+
+        // 現在の並び替え条件
+        var sortKey = null;
+        var sortAscending = true;
+
+        /*
+         * sources.jsonを読み込む
+         */
+        fetch('sources.json')
+            .then(res => res.json())
+            .then(sources => {
+
+                source = sources.find(
+                    d => d.name == location.hash.replace('#', '')
+                );
+
+                if (!source) {
+                    document.getElementById('title').innerText =
+                        '対象月のデータが見つかりませんでした';
+                    return;
+                }
+
+                document.getElementById('title').innerText = source.text;
+                document.title = source.text + ' - 計測震度データベース';
+
+                /*
+                 * 月の地震データを読み込む
+                 */
+                fetch(source.path)
+                    .then(res => res.json())
+                    .then(data => {
+
+                        quakes = data.map(d => {
+                            d.maxInt = (d.int && Object.entries(d.int).length > 0)
+                                ? Object.entries(d.int)[0][1]
+                                : 0;
+                            d.int = null;
+                            return d;
+                        });
+
+                        document.getElementById('title').innerText =
+                            source.text + ' (計 ' + quakes.length + '地震)';
+
+                        /*
+                         * ページネーション作成
+                         */
+                        document.getElementById('pagination').innerHTML =
+                            '<li><a id="prvbtn" class="uk-disabled"><span uk-pagination-previous></span></a></li>';
+
+                        for (let i = 0; i < Math.ceil(quakes.length / 500); i++) {
+                            document.getElementById('pagination').innerHTML +=
+                                `<li><a onclick="list(${i * 500}, 500);">${i + 1}</a></li>`;
+                        }
+
+                        document.getElementById('pagination').innerHTML +=
+                            '<li><a id="nextbtn"><span uk-pagination-next></span></a></li>';
+
+                        list(0, 500);
+                    });
+
+                gtag('event', 'view_month', {
+                    month: source.name,
+                    send_to: 'G-GRQELX997W'
+                });
+            });
+
+        /*
+         * 並び替え
+         */
+        function sortQuakes(key) {
+            if (sortKey === key) {
+                sortAscending = !sortAscending;
+            } else {
+                sortKey = key;
+                sortAscending = true;
+            }
+
+            quakes.sort(function (a, b) {
+                var valueA, valueB;
+
+                if (key === 'time') {
+                    valueA = getQuakeTime(a);
+                    valueB = getQuakeTime(b);
+                } else if (key === 'magnitude') {
+                    valueA = Number(a.magnitude);
+                    valueB = Number(b.magnitude);
+                } else if (key === 'maxInt') {
+                    valueA = Number(a.maxInt);
+                    valueB = Number(b.maxInt);
+                }
+
+                if (valueA < valueB) return sortAscending ? -1 : 1;
+                if (valueA > valueB) return sortAscending ? 1 : -1;
+                return 0;
+            });
+
+            updateSortButtons();
+            list(0, 500);
+        }
+
+        /*
+         * 地震発生時刻を数値化
+         */
+        function getQuakeTime(quake) {
+            return new Date(
+                Number(source.year),
+                Number(source.month) - 1,
+                Number(quake.days),
+                Number(quake.hours),
+                Number(quake.minutes)
+            ).getTime();
+        }
+
+        /*
+         * 並び替えボタンの表示更新
+         */
+        function updateSortButtons() {
+            var timeButton = document.getElementById('timeSortBtn');
+            timeButton.innerHTML = '発生時刻 <span class="sort-arrow">' +
+                (sortKey === 'time' ? (sortAscending ? '↑' : '↓') : '↕') + '</span>';
+
+            var magnitudeButton = document.getElementById('magnitudeSortBtn');
+            magnitudeButton.innerHTML = 'マグニチュード <span class="sort-arrow">' +
+                (sortKey === 'magnitude' ? (sortAscending ? '↑' : '↓') : '↕') + '</span>';
+
+            var intensityButton = document.getElementById('intensitySortBtn');
+            intensityButton.innerHTML = '最大震度 <span class="sort-arrow">' +
+                (sortKey === 'maxInt' ? (sortAscending ? '↑' : '↓') : '↕') + '</span>';
+        }
+
+        /*
+         * 地震一覧表示
+         */
+        function list(start, limit) {
+            document.getElementById('table').innerHTML = '';
+
+            var active = document.getElementsByClassName('uk-active');
+            if (active.length) {
+                active[0].setAttribute('class', '');
+            }
+
+            if (start !== 0) {
+                document.getElementById('prvbtn').setAttribute('onclick', `list(${start - limit > 0 ? start - limit : 0}, ${limit});`);
+                document.getElementById('prvbtn').setAttribute('class', '');
+            } else {
+                document.getElementById('prvbtn').setAttribute('onclick', '');
+                document.getElementById('prvbtn').setAttribute('class', 'uk-disabled');
+            }
+
+            var count = 0;
+            var tableHTML = '';
+
+            for (const quake of quakes) {
+                if (start <= count && start + limit > count) {
+                    tableHTML +=
+                        `<tr onclick="location.href='view.html#${source.name}.${quake.id}'">` +
+                        `<td>${quake.id}</td>` +
+                        `<td>${quake.days}日${quake.hours}時${quake.minutes}分</td>` +
+                        `<td>${quake.epicentername}</td>` +
+                        `<td>${quake.depth}</td>` +
+                        `<td>M${quake.magnitude}</td>` +
+                        `<td>${toIntText(quake.maxInt)}</td>` +
+                        `</tr>`;
+                }
+                count++;
+            }
+
+            document.getElementById('table').innerHTML = tableHTML;
+
+            if (count > start + limit) {
+                document.getElementById('nextbtn').setAttribute('onclick', `list(${start + limit}, ${limit});`);
+                document.getElementById('nextbtn').setAttribute('class', '');
+            } else {
+                document.getElementById('nextbtn').setAttribute('onclick', '');
+                document.getElementById('nextbtn').setAttribute('class', 'uk-disabled');
+            }
+
+            var pageIndex = Math.floor(start / limit) + 1;
+            if (document.getElementById('pagination').children[pageIndex]) {
+                document.getElementById('pagination').children[pageIndex].setAttribute('class', 'uk-active');
+            }
+        }
+
+        /*
+         * 最大計測震度 → 震度階級
+         */
+        function toIntText(int) {
+            if (int < 0.5) return '<span class="uk-label">震度０</span>';
+            if (int < 1.5) return '<span class="uk-label" style="background: #f2f2ff; color: black;">震度１</span>';
+            if (int < 2.5) return '<span class="uk-label" style="background: #00aaff; color: black;">震度２</span>';
+            if (int < 3.5) return '<span class="uk-label" style="background: #0041ff; color: white;">震度３</span>';
+            if (int < 4.5) return '<span class="uk-label" style="background: #fae696; color: black;">震度４</span>';
+            if (int < 5.0) return '<span class="uk-label" style="background: #ffe600; color: black;">震度５弱</span>';
+            if (int < 5.5) return '<span class="uk-label" style="background: #ff9900; color: black;">震度５強</span>';
+            if (int < 6.0) return '<span class="uk-label" style="background: #ff2800; color: white;">震度６弱</span>';
+            if (int < 6.5) return '<span class="uk-label" style="background: #a50021; color: white;">震度６強</span>';
+            return '<span class="uk-label" style="background: #b40068; color: white;">震度７</span>';
+        }
+    </script>
+
+</body>
+
+</html>

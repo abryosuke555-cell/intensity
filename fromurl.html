@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <title>震度データベースのURLから検索 - 計測震度データベース</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GRQELX997W"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-GRQELX997W');
+    </script>
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #table tr {
+            cursor: pointer;
+        }
+
+        .btn {
+            position: fixed;
+            z-index: 1000;
+            border: 2px solid #cbcbcb;
+            left: 10px;
+        }
+
+        #backbtn {
+            top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="uk-container">
+        <div class="uk-margin" style="margin-top: 20%;">
+            <input id="input" class="uk-input" type="text" placeholder="ここに震度データベースのURLをペーストしてください">
+            <div class="uk-alert-warning" uk-alert id="alert" style="display: none;">
+            </div>
+        </div>
+        <p class="uk-text-muted" style="margin-top: 20%;">
+            Copyright 2023-2024 iku55. Source codes are licensed under the MIT License.<br>
+            このサイトはGoogleアナリティクスを使用しています。<br>
+            情報の正確性は保証しません。不正確なデータを確認した場合は<a href="https://forms.gle/hewkCjRMcgYUGxmH6">こちらのフォーム</a>からご報告ください。
+        </p>
+    </div>
+
+    
+
+    <a id="backbtn" href="index.html" class="uk-icon-button btn" uk-icon="arrow-left"
+        uk-tooltip="title: 月データ一覧へ戻る; pos: right"></a>
+
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+    <script>
+        location.href = "index.html#urlinput"
+        document.getElementById('input').oninput = () => {
+            hideAlert();
+            if (document.getElementById('input').value.includes('://www.data.jma.go.jp/svd/eqdb/data/shindo/') && document.getElementById('input').value.includes('#')) {
+                if (document.getElementById('input').value.split('#')[1].length == 14) {
+                    fetch('sources.json').then(res => res.json().then(sources => {
+                        var source = sources.find(d => d.name == document.getElementById('input').value.split('#')[1].substring(0, 6) && d.dbid == true); //一時的な対応
+                        if (source) {
+                            fetch(source.path).then(res => res.json().then(quakes => {
+                                var quake = quakes.find(d => d.dbid == document.getElementById('input').value.split('#')[1]);
+                                if (quake) {
+                                    gtag('event', 'from_url', {
+                                        earthquake_id: quake.dbid,
+                                        send_to: 'G-GRQELX997W'
+                                    });
+                                    location.href = 'view.html#'+source.name+'.'+quake.id;
+                                } else {
+                                    showAlert('対象地震のデータが見つかりませんでした')
+                                }
+                            }))
+                        } else {
+                            showAlert('対象月のデータが見つかりませんでした')
+                        }
+                    }))
+                } else {
+                    showAlert('震度データベースのURLを入力してください');
+                }
+            } else {
+                showAlert('震度データベースのURLを入力してください');
+            }
+        }
+
+        function showAlert(msg) {
+            document.getElementById('alert').style.display = '';
+            document.getElementById('alert').innerHTML = '<p>'+msg+'</p>';
+        }
+        function hideAlert() {
+            document.getElementById('alert').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

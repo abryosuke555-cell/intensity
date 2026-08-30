@@ -1,0 +1,27 @@
+{
+    "name": "shindo-db",
+    "version": "1.0.0",
+    "description": "計測震度Webアプリ",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "build": "electron-builder"
+    },
+    "devDependencies": {
+        "electron": "^37.0.0",
+        "electron-builder": "^26.0.0"
+    },
+    "build": {
+        "appId": "jp.shindo.db",
+        "productName": "計測震度",
+        "files": [
+            "**/*"
+        ],
+        "win": {
+            "target": "nsis"
+        }
+    },
+    "allowScripts": {
+        "electron@37.10.3": true
+    }
+}

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>計測震度データベース</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="css/uikit.min.css">
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+            background: #f3f6f9;
+        }
+
+        body {
+            color: #222;
+        }
+
+        /* =========================
+           全体
+        ========================= */
+
+        .page-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 50px 20px 70px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin: 0 0 35px;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        /* =========================
+           メインカード
+        ========================= */
+
+        .archive-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.06);
+            padding: 32px;
+        }
+
+        .archive-title {
+            margin: 0 0 25px;
+            font-size: 23px;
+            font-weight: 700;
+        }
+
+        /* =========================
+           年一覧
+        ========================= */
+
+        .year-list {
+            display: grid;
+            grid-template-columns:
+                repeat(7, minmax(0, 1fr));
+
+            gap: 10px;
+
+            padding-bottom: 28px;
+
+            border-bottom:
+                1px solid #e6e9ed;
+        }
+
+        .year-button {
+            appearance: none;
+
+            border: 1px solid #dfe4e9;
+
+            background: #fff;
+
+            color: #333;
+
+            border-radius: 9px;
+
+            min-height: 48px;
+
+            padding: 5px 8px;
+
+            font-size: 17px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s,
+                color 0.2s,
+                border-color 0.2s,
+                transform 0.2s,
+                box-shadow 0.2s;
+        }
+
+        .year-button:hover {
+            background: #f4f8fc;
+
+            border-color: #9db8d2;
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 4px 10px
+                rgba(0, 0, 0, 0.07);
+        }
+
+        /*
+         * 選択中の年
+         */
+        .year-button.active {
+            background: #1976d2;
+
+            border-color: #1976d2;
+
+            color: #fff;
+
+            box-shadow:
+                0 4px 12px
+                rgba(25, 118, 210, 0.25);
+        }
+
+        .year-button.active:hover {
+            background: #1565c0;
+
+            border-color: #1565c0;
+        }
+
+        /* =========================
+           月一覧エリア
+        ========================= */
+
+        .month-area {
+            padding-top: 28px;
+        }
+
+        .selected-year {
+            display: flex;
+            align-items: center;
+
+            margin: 0 0 20px;
+
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        /*
+         * 年の左側のアクセント
+         */
+        .selected-year::before {
+            content: "";
+
+            display: inline-block;
+
+            width: 5px;
+            height: 25px;
+
+            margin-right: 10px;
+
+            background: #1976d2;
+
+            border-radius: 3px;
+        }
+
+        /* =========================
+           月ボタン
+        ========================= */
+
+        .month-button {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-height: 58px;
+
+            background: #f8fafc;
+
+            border: 1px solid #e1e6eb;
+
+            border-radius: 10px;
+
+            color: #333;
+
+            font-size: 17px;
+            font-weight: 600;
+
+            text-decoration: none;
+
+            transition:
+                background 0.2s,
+                border-color 0.2s,
+                transform 0.2s,
+                box-shadow 0.2s,
+                color 0.2s;
+        }
+
+        .month-button:hover {
+            background: #fff;
+
+            border-color: #1976d2;
+
+            color: #1976d2;
+
+            text-decoration: none;
+
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 6px 15px
+                rgba(0, 0, 0, 0.08);
+        }
+
+        .month-button:active {
+            transform: translateY(0);
+        }
+
+        /* =========================
+           データなし
+        ========================= */
+
+        .no-data {
+            padding: 25px;
+
+            text-align: center;
+
+            color: #888;
+
+            background: #f8f9fa;
+
+            border-radius: 10px;
+        }
+
+        /* =========================
+           フッター
+        ========================= */
+
+        .footer {
+            margin-top: 35px;
+
+            text-align: center;
+
+            color: #999;
+
+            font-size: 13px;
+        }
+
+        /* =========================
+           タブレット
+        ========================= */
+
+        @media (max-width: 800px) {
+
+            .year-list {
+                grid-template-columns:
+                    repeat(5, minmax(0, 1fr));
+            }
+
+        }
+
+        /* =========================
+           スマートフォン
+        ========================= */
+
+        @media (max-width: 640px) {
+
+            .page-container {
+                padding: 30px 10px 50px;
+            }
+
+            .page-title {
+                font-size: 26px;
+
+                margin-bottom: 25px;
+            }
+
+            .archive-card {
+                padding: 22px 18px;
+
+                border-radius: 12px;
+            }
+
+            .archive-title {
+                font-size: 21px;
+
+                margin-bottom: 20px;
+            }
+
+            .year-list {
+                grid-template-columns:
+                    repeat(4, minmax(0, 1fr));
+
+                gap: 8px;
+
+                padding-bottom: 22px;
+            }
+
+            .year-button {
+                min-height: 44px;
+
+                font-size: 16px;
+
+                border-radius: 8px;
+            }
+
+            .month-area {
+                padding-top: 22px;
+            }
+
+            .selected-year {
+                font-size: 20px;
+
+                margin-bottom: 16px;
+            }
+
+            .selected-year::before {
+                width: 4px;
+                height: 22px;
+
+                margin-right: 8px;
+            }
+
+            .month-button {
+                min-height: 52px;
+
+                font-size: 16px;
+
+                border-radius: 9px;
+            }
+
+        }
+
+        /* =========================
+           小さいスマートフォン
+        ========================= */
+
+        @media (max-width: 400px) {
+
+            .year-list {
+                grid-template-columns:
+                    repeat(3, minmax(0, 1fr));
+            }
+
+            .year-button {
+                font-size: 15px;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+    <div class="page-container">
+
+        <h1 class="page-title">
+            計測震度データベース
+        </h1>
+
+
+        <div class="archive-card">
+
+            <h2 class="archive-title">
+                年月別一覧
+            </h2>
+
+
+            <!-- 年一覧 -->
+            <div
+                id="year-list"
+                class="year-list"
+            >
+            </div>
+
+
+            <!-- 選択した年の月一覧 -->
+            <div
+                id="month-area"
+                class="month-area"
+            >
+            </div>
+
+        </div>
+
+
+        <div class="footer">
+            計測震度データベース
+        </div>
+
+    </div>
+
+
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+
+
+    <script>
+
+        let groupedData = {};
+
+
+        /*
+         * sources.jsonを読み込む
+         */
+        async function loadArchive() {
+
+            try {
+
+                const response =
+                    await fetch('./sources.json');
+
+                const data =
+                    await response.json();
+
+
+                /*
+                 * visible=true のデータだけ使用
+                 */
+                groupedData = data.reduce(
+                    (acc, item) => {
+
+                        if (!item.visible) {
+                            return acc;
+                        }
+
+                        if (!acc[item.year]) {
+                            acc[item.year] = [];
+                        }
+
+                        acc[item.year].push(item);
+
+                        return acc;
+
+                    },
+                    {}
+                );
+
+
+                /*
+                 * 年を新しい順に並べる
+                 */
+                const years =
+                    Object.keys(groupedData)
+                        .sort(
+                            (a, b) => b - a
+                        );
+
+
+                const yearList =
+                    document.getElementById(
+                        'year-list'
+                    );
+
+
+                /*
+                 * 年一覧を作成
+                 */
+                years.forEach(
+                    (year, index) => {
+
+                        const button =
+                            document.createElement(
+                                'button'
+                            );
+
+                        button.type = 'button';
+
+                        button.className =
+                            'year-button';
+
+                        button.textContent =
+                            year;
+
+
+                        /*
+                         * 年をクリック
+                         */
+                        button.addEventListener(
+                            'click',
+                            () => {
+
+                                displayMonths(year);
+
+
+                                /*
+                                 * すべての年から
+                                 * activeを解除
+                                 */
+                                document
+                                    .querySelectorAll(
+                                        '.year-button'
+                                    )
+                                    .forEach(
+                                        btn => {
+
+                                            btn.classList
+                                                .remove(
+                                                    'active'
+                                                );
+
+                                        }
+                                    );
+
+
+                                /*
+                                 * 選択した年を
+                                 * activeにする
+                                 */
+                                button.classList.add(
+                                    'active'
+                                );
+
+                            }
+                        );
+
+
+                        yearList.appendChild(
+                            button
+                        );
+
+
+                        /*
+                         * 最新の年を
+                         * 初期選択
+                         */
+                        if (index === 0) {
+
+                            button.classList.add(
+                                'active'
+                            );
+
+                            displayMonths(year);
+
+                        }
+
+                    }
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    '年月一覧の読み込みに失敗しました:',
+                    error
+                );
+
+
+                document.getElementById(
+                    'month-area'
+                ).innerHTML = `
+
+                    <div
+                        class="uk-alert-danger"
+                        uk-alert
+                    >
+                        年月一覧を読み込めませんでした。
+                    </div>
+
+                `;
+
+            }
+
+        }
+
+
+        /*
+         * 選択された年の月を表示
+         */
+        function displayMonths(year) {
+
+            const monthArea =
+                document.getElementById(
+                    'month-area'
+                );
+
+
+            const months =
+                groupedData[year] || [];
+
+
+            /*
+             * 月を1月→12月に並べる
+             */
+            months.sort(
+                (a, b) => {
+
+                    return parseInt(a.month)
+                        - parseInt(b.month);
+
+                }
+            );
+
+
+            /*
+             * データがない場合
+             */
+            if (months.length === 0) {
+
+                monthArea.innerHTML = `
+
+                    <div class="no-data">
+                        ${year}年のデータはありません。
+                    </div>
+
+                `;
+
+                return;
+
+            }
+
+
+            /*
+             * 月ボタンを表示
+             */
+            monthArea.innerHTML = `
+
+                <h3 class="selected-year">
+                    ${year}年
+                </h3>
+
+
+                <div
+                    class="
+                        uk-grid-small
+                        uk-child-width-1-6@m
+                        uk-child-width-1-3@s
+                        uk-child-width-1-2
+                    "
+                    uk-grid
+                >
+
+                    ${months.map(
+                        item => `
+
+                        <div>
+
+                            <a
+                                class="month-button"
+                                href="list.html#${item.name}"
+                            >
+                                ${item.month}月
+                            </a>
+
+                        </div>
+
+                    `
+                    ).join('')}
+
+                </div>
+
+            `;
+
+        }
+
+
+        /*
+         * 読み込み開始
+         */
+        loadArchive();
+
+    </script>
+
+</body>
+</html>
